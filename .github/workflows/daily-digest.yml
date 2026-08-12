@@ -1,0 +1,41 @@
+name: Daily Tech Digest to Slack
+
+on:
+  schedule:
+    # 01:00 UTC = 08:00 Asia/Jakarta (UTC+7). GitHub cron is ALWAYS UTC —
+    # if you move timezones, recompute this offset, don't just paste "8 * * *".
+    - cron: "0 1 * * *"
+  workflow_dispatch: {}   # adds a manual "Run workflow" button for testing
+
+permissions:
+  contents: write   # needed so the job can commit the updated dedupe log
+
+concurrency:
+  group: daily-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - name: Run digest bot
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: python digest_bot.py
+
+      - name: Persist dedupe state
+        run: |
+          git config user.name "digest-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state/posted.json
+          git diff --staged --quiet || git commit -m "chore: update posted-items log [skip ci]"
+          git push

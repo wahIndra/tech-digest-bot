@@ -1,0 +1,53 @@
+# ── Daily Tech Digest — topic configuration ──────────────────────────────
+# This is the ONLY file you touch to change what the bot watches.
+# Add, remove, or edit a topic block and the next run picks it up automatically.
+# No code changes needed.
+
+# How far back each run looks for "new" items. 24h matches a once-a-day post.
+lookback_hours: 24
+
+# Max bullet items shown per topic before truncating ("+N more" is appended).
+max_items_per_topic: 8
+
+# If true, still posts a short "nothing new today" line for empty topics
+# so the channel doesn't look like the bot died. If false, empty topics
+# are silently skipped from that day's message.
+post_if_empty: true
+
+topics:
+  - name: "Java"
+    keywords: ["Java", "OpenJDK", "JVM", "JDK", "Spring Boot", "Spring Framework"]
+    fetchers:
+      # NVD CVE search scoped to these keywords
+      - type: cve
+        min_severity: HIGH        # LOW | MEDIUM | HIGH | CRITICAL (client-side "at or above" filter)
+      # InfoQ's Java-topic feed — already topic-scoped, no keyword filter needed
+      - type: rss
+        url: "https://feed.infoq.com/java/"
+        filter_by_keywords: false
+      # Hacker News (Algolia) story search
+      - type: hn
+
+  - name: "CVE Watch"
+    keywords: ["vulnerability", "exploit", "zero-day", "0-day", "RCE", "CVE"]
+    fetchers:
+      - type: cve
+        min_severity: CRITICAL
+      - type: hn
+
+  - name: "OWASP"
+    keywords: ["OWASP", "Top 10", "SQL injection", "XSS", "SSRF", "CSRF", "broken access control"]
+    fetchers:
+      # The Hacker News (thehackernews.com) general security feed, keyword-filtered
+      - type: rss
+        url: "https://feeds.feedburner.com/TheHackersNews"
+        filter_by_keywords: true
+      - type: hn
+
+# ── How to add a 4th topic later, e.g. "Kubernetes" ──────────────────────
+#  - name: "Kubernetes"
+#    keywords: ["Kubernetes", "K8s", "kubectl"]
+#    fetchers:
+#      - type: cve
+#        min_severity: HIGH
+#      - type: hn
