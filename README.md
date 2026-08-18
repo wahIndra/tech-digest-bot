@@ -30,7 +30,7 @@ Incoming Webhooks.
 2. Name it (e.g. "Tech Digest Bot"), pick your workspace.
 3. In the left sidebar: **Incoming Webhooks** → toggle **Activate Incoming Webhooks** on.
 4. Click **Add New Webhook to Workspace**, choose the channel to post into, **Allow**.
-5. Copy the webhook URL (`https://hooks.slack.com/services/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`). Treat it like a password —
+5. Copy the webhook URL. Treat it like a password —
    anyone with this URL can post to that channel.
 
 ## 2. Create the GitHub repo
