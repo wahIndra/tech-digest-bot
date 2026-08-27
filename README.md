@@ -1,9 +1,9 @@
-# Daily Tech Digest → Slack
+# Daily Tech Digest → Slack & Webhook
 
 A free, self-hosted (as in: hosted on GitHub's dime) bot that posts a daily
 8am summary of what's new on your configured topics — CVEs, OWASP-flagged
 security news, Java/OpenJDK news, and whatever else you add — to a Slack
-channel. No server, no paid API, no always-on process.
+channel and/or a custom Webhook endpoint (e.g. your personal website). No server, no paid API, no always-on process.
 
 ## How it works
 
@@ -51,7 +51,9 @@ Incoming Webhooks.
 
 Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
 
-- `SLACK_WEBHOOK_URL` — the URL from step 1. **Required.**
+- `SLACK_WEBHOOK_URL` — the URL from step 1. Required if `WEBSITE_WEBHOOK_URL` is not set.
+- `WEBSITE_WEBHOOK_URL` — optional. A URL (e.g., to your personal website's API) to receive the daily digest as a Markdown JSON payload (`{"content": "# Markdown..."}`).
+- `WEBSITE_AUTH_TOKEN` — optional. A secret token that will be sent as a Bearer token in the `Authorization` header to your website webhook.
 - `NVD_API_KEY` — optional. Get one free at
   <https://nvd.nist.gov/developers/request-an-api-key> (usually issued within minutes).
   Without it you're rate-limited to ~5 requests/30s, which the script already

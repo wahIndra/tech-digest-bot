@@ -213,12 +213,55 @@ def post_to_slack(webhook_url, blocks):
         raise RuntimeError(f"Slack webhook returned {r.status_code}: {r.text}")
 
 
+def website_markdown(date_str, topics_with_items, max_items_per_topic, post_if_empty):
+    lines = [f"# Daily Tech Digest — {date_str}\n"]
+    any_content = False
+    for topic_name, items in topics_with_items:
+        if not items and not post_if_empty:
+            continue
+        any_content = True
+        lines.append(f"## {topic_name}")
+        if not items:
+            lines.append("_No new items today._\n")
+            continue
+        shown = items[:max_items_per_topic]
+        for i in shown:
+            lines.append(f"- [{i['title']}]({i['url']}) *({i['source']})*")
+        if len(items) > max_items_per_topic:
+            lines.append(f"- *+{len(items) - max_items_per_topic} more*")
+        lines.append("")
+    if not any_content:
+        lines.append("No new items across any topic today.")
+        
+    lines.append("")
+    lines.append("---")
+    lines.append("posted by : BEIBEH (Borneo Engineering Intelligence Bot & Evaluation Helper). [Try Free Version](https://github.com/wahIndra/tech-digest-bot.git)")
+    
+    return "\n".join(lines)
+
+
+def post_to_website(webhook_url, auth_token, content):
+    headers = {}
+    if auth_token:
+        headers["Authorization"] = f"Bearer {auth_token}"
+    payload = {"content": content}
+    try:
+        r = requests.post(webhook_url, json=payload, headers=headers, timeout=20)
+        if r.status_code not in (200, 201, 204):
+            print(f"  [warn] Website webhook returned {r.status_code}: {r.text}", file=sys.stderr)
+    except requests.RequestException as e:
+        print(f"  [warn] Failed to post to website: {e}", file=sys.stderr)
+
+
 # ── main ───────────────────────────────────────────────────────────────
 
 def main():
-    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
-    if not webhook_url:
-        print("SLACK_WEBHOOK_URL is not set.", file=sys.stderr)
+    slack_webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+    website_webhook_url = os.environ.get("WEBSITE_WEBHOOK_URL")
+    website_auth_token = os.environ.get("WEBSITE_AUTH_TOKEN")
+
+    if not slack_webhook_url and not website_webhook_url:
+        print("Neither SLACK_WEBHOOK_URL nor WEBSITE_WEBHOOK_URL is set.", file=sys.stderr)
         sys.exit(1)
     nvd_api_key = os.environ.get("NVD_API_KEY")  # optional
 
@@ -241,10 +284,18 @@ def main():
         timezone(timedelta(hours=7))  # Asia/Jakarta, no external tz db dependency
     ).strftime("%Y-%m-%d")
 
-    blocks = slack_blocks(
-        date_str, results, config.get("max_items_per_topic", 8), config.get("post_if_empty", True)
-    )
-    post_to_slack(webhook_url, blocks)
+    if slack_webhook_url:
+        blocks = slack_blocks(
+            date_str, results, config.get("max_items_per_topic", 8), config.get("post_if_empty", True)
+        )
+        post_to_slack(slack_webhook_url, blocks)
+        
+    if website_webhook_url:
+        md_content = website_markdown(
+            date_str, results, config.get("max_items_per_topic", 8), config.get("post_if_empty", True)
+        )
+        post_to_website(website_webhook_url, website_auth_token, md_content)
+
     save_state(state)
     print("Done.")
 

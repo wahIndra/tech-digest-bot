@@ -29,6 +29,8 @@ jobs:
       - name: Run digest bot
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          WEBSITE_WEBHOOK_URL: ${{ secrets.WEBSITE_WEBHOOK_URL }}
+          WEBSITE_AUTH_TOKEN: ${{ secrets.WEBSITE_AUTH_TOKEN }}
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: python digest_bot.py
 
